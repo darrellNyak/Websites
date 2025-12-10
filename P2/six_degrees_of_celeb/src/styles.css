@@ -1,0 +1,20 @@
+@font-face{
+    font-family: ShadowHand;
+    src: url('assets/fonts/ShadowHand.ttf') format('truetype');
+
+    font-family: SkyScrapper;
+    src: url('assets/fonts/Skyscapers.ttf') format('truetype');
+}
+
+/* Light mode (default) */
+body {
+    background-color: #fdf5e6;
+    color: #333333;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dark mode */
+body.dark-mode {
+    background-color: #1a1a1a;
+    color: #e7eae5;
+}

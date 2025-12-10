@@ -1,0 +1,32 @@
+<div class="search-container">
+
+  <input
+    type="text"
+    name="text"
+    [(ngModel)]="searchQuery"
+    (input)="onSearch()"
+    class="search-input"
+  >
+  <label class="label" for="input">Search</label>
+  <div class="topline"></div>
+  <div class="underline"></div>
+
+  
+  <div *ngIf="showResults && searchResults.length > 0" class="search-results">
+    <div
+      *ngFor="let celebrity of searchResults"
+      (click)="selectCelebrity(celebrity)"
+      class="search-result-item"
+    >
+      <img [src]="celebrity.imageUrl" [alt]="celebrity.name" class="result-image">
+      <div class="result-info">
+        <strong>{{ celebrity.name }}</strong>
+        <span>{{ celebrity.profession }}</span>
+      </div>
+    </div>
+  </div>
+  
+  <div *ngIf="showResults && searchResults.length === 0" class="no-results">
+    No celebrities found
+  </div>
+</div>

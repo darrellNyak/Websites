@@ -1,0 +1,168 @@
+/* From Uiverse.io by eslam-hany */ 
+.search-container {
+  position: relative;
+}
+
+.search-input {
+  padding: 10px;
+  height: 40px;
+  border: 2px solid #0B2447;
+  border-top: none;
+  border-bottom: none;
+  font-size: 16px;
+  background: transparent;
+  color: #333333;
+  outline: none;
+  box-shadow: 7px 7px 0px 0px #0B2447;
+  transition: all 0.5s;
+  width: 100%;
+}
+
+.search-input:focus {
+  box-shadow: none !important;
+  transition: all 0.5s;
+}
+
+.label {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  color: #0B2447;
+  transition: all 0.5s;
+  transform: scale(0);
+  z-index: -1;
+}
+
+.search-container .topline {
+  position: absolute;
+  content: "";
+  background-color: #0B2447;
+  width: 0%;
+  height: 2px;
+  right: 0;
+  top: 0;
+  transition: all 0.5s;
+  pointer-events: none;
+}
+
+.search-container .search-input:focus ~ .topline {
+  width: 35%;
+}
+
+.search-container .underline {
+  position: absolute;
+  content: "";
+  background-color: #0B2447;
+  width: 0%;
+  height: 2px;
+  right: 0;
+  bottom: 0;
+  transition: all 0.5s;
+  pointer-events: none;
+}
+
+.search-container .search-input:focus ~ .underline {
+  width: 100%;
+}
+
+.search-container .search-input:focus ~ .label {
+  top: -10px;
+  transform: scale(1);
+}
+
+
+::ng-deep body.dark-mode .search-input {
+  border-color: #4a9eff !important;
+  box-shadow: 7px 7px 0px 0px #4a9eff !important;
+  color: #e0e0e0 !important;
+}
+
+::ng-deep body.dark-mode .label {
+  color: #4a9eff !important;
+}
+
+::ng-deep body.dark-mode .search-container .topline {
+  background-color: #4a9eff !important;
+}
+
+::ng-deep body.dark-mode .search-container .underline {
+  background-color: #4a9eff !important;
+}
+
+/* Search results dropdown */
+.search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #0B2447;
+  border-top: none;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+  margin-top: 2px;
+}
+
+::ng-deep body.dark-mode .search-results {
+  background: #2a2a2a !important;
+  border-color: #4a9eff !important;
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+::ng-deep body.dark-mode .search-result-item {
+  border-bottom-color: #444 !important;
+}
+
+.search-result-item:hover {
+  background: #f0f0f0;
+}
+
+::ng-deep body.dark-mode .search-result-item:hover {
+  background: #3a3a3a !important;
+}
+
+.result-image {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 10px;
+}
+
+.result-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.result-info span {
+  font-size: 0.9em;
+  color: #666;
+}
+
+::ng-deep body.dark-mode .result-info span {
+  color: #aaa !important;
+}
+
+.no-results {
+  padding: 15px;
+  text-align: center;
+  color: #666;
+  background: white;
+  border: 2px solid #0B2447;
+  border-top: none;
+  margin-top: 2px;
+}
+
+::ng-deep body.dark-mode .no-results {
+  background: #2a2a2a !important;
+  border-color: #4a9eff !important;
+  color: #aaa !important;
+}

@@ -1,0 +1,23 @@
+.path-step{
+    display: flex;
+}
+
+.path-container {
+    display: flex;
+}
+
+.connection-arrow{
+    display: block;
+    width: min-content;
+    
+}
+
+.arrow{
+    font-size: 5em;
+    height: min-content
+}
+
+.movie-poster {
+    height: 600px;
+    width: 450px;
+}

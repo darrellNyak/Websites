@@ -1,0 +1,6 @@
+.celebrity-image{
+    width: 200px;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 10px;
+}

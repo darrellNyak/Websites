@@ -1,0 +1,26 @@
+<div class="connection-path" *ngIf="connectionPath">
+  <h3>Connection Found! ({{ connectionPath.degrees }} degrees)</h3>
+  
+  <div class="path-container">
+    <div class="path-step" *ngFor="let celebrity of connectionPath.path; let i = index">
+      <app-celebrity-card [celebrity]="celebrity"></app-celebrity-card>
+      
+      <div class="arrow" *ngIf="i < connectionPath.path.length - 1">&#8598;</div>
+      <div class="connection-arrow" *ngIf="i < connectionPath.path.length - 1">
+        <div class="movie-connection" *ngIf="connectionPath.movies && connectionPath.movies[i]">
+          <img 
+            *ngIf="connectionPath.movies[i].movie.poster" 
+            [src]="connectionPath.movies[i].movie.poster" 
+            [alt]="connectionPath.movies[i].movie.title"
+            class="movie-poster"
+          />
+          <div class="movie-info">
+            <strong>{{ connectionPath.movies[i].movie.title }}</strong>
+            <span *ngIf="connectionPath.movies[i].movie.year">({{ connectionPath.movies[i].movie.year }})</span>
+          </div>
+        </div>
+      </div>
+      <div class="arrow" *ngIf="i < connectionPath.path.length - 1">&#8599;</div>
+    </div>
+  </div>
+</div>
