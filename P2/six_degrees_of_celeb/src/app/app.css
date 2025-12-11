@@ -94,3 +94,50 @@ body.dark-mode .theme-toggle {
 .theme-toggle:hover {
     transform: scale(1.05);
 }
+
+.app-footer {
+  margin-top: 60px;
+  padding: 40px 20px;
+  background: rgba(0, 0, 0, 0.05);
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+body.dark-mode .app-footer {
+  background: rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tmdb-attribution {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.tmdb-logo {
+  height: 40px;
+  width: auto;
+  /* If the image has a transparent background, this ensures it looks good in dark mode */
+  background: white;
+  padding: 8px 16px;
+  border-radius: 4px;
+}
+
+body.dark-mode .tmdb-logo {
+  /* The white background ensures the logo is always visible in dark mode */
+  background: white;
+}
+
+.tmdb-attribution p {
+  font-size: 0.9em;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+body.dark-mode .tmdb-attribution p {
+  color: #aaa;
+}

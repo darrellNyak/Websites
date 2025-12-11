@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, catchError, of } from 'rxjs';
+import { Observable, map, catchError, of, throwError } from 'rxjs';
 import { Celebrity } from '../models/celebrity';
 
 @Injectable({
@@ -52,13 +52,24 @@ export class TmdbService {
     );
   }
 
+  /**
+   * Get combined credits (both movies and TV shows) for a celebrity
+   */
   getCelebrityCredits(id: string): Observable<{ cast: any[], crew: any[] }> {
     const url = `${this.BASE_URL}/person/${id}/combined_credits?api_key=${this.API_KEY}`;
     
     return this.http.get<any>(url).pipe(
       map(response => ({
-        cast: response.cast || [],
-        crew: response.crew || []
+        cast: (response.cast || [])
+          .filter((c: any) => c.media_type === 'movie') // Only movies
+          .map((c: any) => ({
+            ...c,
+            mediaType: 'movie'
+          })),
+        crew: (response.crew || []).map((c: any) => ({
+          ...c,
+          mediaType: c.media_type
+        }))
       })),
       catchError(error => {
         console.error(`TMDB celebrity credits error for ID ${id}:`, error);
@@ -67,6 +78,37 @@ export class TmdbService {
     );
   }
 
+  /**
+   * NEW: Get ONLY TV credits for a celebrity
+   */
+  getCelebrityTVCredits(id: string): Observable<{ cast: any[], crew: any[] }> {
+    const url = `${this.BASE_URL}/person/${id}/combined_credits?api_key=${this.API_KEY}`;
+    
+    return this.http.get<any>(url).pipe(
+      map(response => ({
+        cast: (response.cast || [])
+          .filter((c: any) => c.media_type === 'tv') // Only TV shows
+          .map((c: any) => ({
+            ...c,
+            mediaType: 'tv'
+          })),
+        crew: (response.crew || [])
+          .filter((c: any) => c.media_type === 'tv')
+          .map((c: any) => ({
+            ...c,
+            mediaType: 'tv'
+          }))
+      })),
+      catchError(error => {
+        console.error(`TMDB TV credits error for ID ${id}:`, error);
+        return of({ cast: [], crew: [] });
+      })
+    );
+  }
+
+  /**
+   * Get credits for a specific movie
+   */
   getMovieCredits(movieId: number): Observable<{ cast: any[], crew: any[] }> {
     const url = `${this.BASE_URL}/movie/${movieId}/credits?api_key=${this.API_KEY}`;
     
@@ -77,32 +119,54 @@ export class TmdbService {
       })),
       catchError(error => {
         console.error(`TMDB movie credits error for movie ${movieId}:`, error);
-        return of({ cast: [], crew: [] });
+        throw error;
       })
     );
   }
 
-  getTVCredits(tvId: number): Observable<{ cast: any[], crew: any[] }> {
+  /**
+   * NEW: Get credits for a specific TV show
+   */
+  getTVShowCredits(tvId: number): Observable<{ cast: any[], crew: any[] }> {
     const url = `${this.BASE_URL}/tv/${tvId}/credits?api_key=${this.API_KEY}`;
     
     return this.http.get<any>(url).pipe(
       map(response => ({
-        cast: response.cast || [],
+        cast: (response.cast || []).map((c: any) => ({ ...c, mediaType: 'tv' })),
         crew: response.crew || []
       })),
       catchError(error => {
-        console.error(`TMDB TV credits error for show ${tvId}:`, error);
-        return of({ cast: [], crew: [] });
+        if (error.status !== 404) {
+          console.error(`TMDB TV credits error for show ${tvId}:`, error);
+        }
+        throw error;
       })
     );
   }
 
+  /**
+   * Get details for a specific movie
+   */
   getMovieDetails(movieId: number): Observable<any> {
     const url = `${this.BASE_URL}/movie/${movieId}?api_key=${this.API_KEY}`;
     
     return this.http.get<any>(url).pipe(
       catchError(error => {
         console.error(`TMDB movie details error for movie ${movieId}:`, error);
+        return of(null);
+      })
+    );
+  }
+
+  /**
+   * NEW: Get details for a specific TV show
+   */
+  getTVShowDetails(tvShowId: number): Observable<any> {
+    const url = `${this.BASE_URL}/tv/${tvShowId}?api_key=${this.API_KEY}`;
+    
+    return this.http.get<any>(url).pipe(
+      catchError(error => {
+        console.error(`TMDB TV show details error for show ${tvShowId}:`, error);
         return of(null);
       })
     );

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, forkJoin, of } from 'rxjs';
-import { map, catchError, tap, switchMap } from 'rxjs/operators';
+import { Observable, forkJoin, of, throwError } from 'rxjs';
+import { map, catchError, tap, switchMap, timeout, retry } from 'rxjs/operators';
 import { Celebrity, ConnectionPath } from '../models/celebrity';
 import { TmdbService } from './tmdb.service';
 import { WikipediaService } from './wikipedia.service';
@@ -10,20 +10,12 @@ import { WikipediaService } from './wikipedia.service';
   providedIn: 'root'
 })
 export class CelebrityService {
-  // Map of celebrity ID -> array of celebrity IDs they've worked with
   private connectionGraph = new Map<string, Set<string>>();
-  
-  // Map of celebrity ID -> Celebrity object
   private celebrityCache = new Map<string, Celebrity>();
-  
-  // Map of celebrity ID -> array of movie IDs they've been in
   private movieCreditsCache = new Map<string, number[]>();
-  
-  // Cache for search results
+  private tvCreditsCache = new Map<string, number[]>(); // NEW: TV show cache
   private searchCache = new Map<string, Celebrity[]>();
-
-  //Movie connections between celebrity pairs
-  private movieConnectionsMap = new Map<string, number>();
+  private mediaConnectionsMap = new Map<string, { id: number; type: 'movie' | 'tv' }>(); // UPDATED: Track both movies and TV
 
   constructor(
     private tmdbService: TmdbService,
@@ -69,7 +61,13 @@ export class CelebrityService {
     if (id.startsWith('tmdb_')) {
       const tmdbId = id.replace('tmdb_', '');
       return this.tmdbService.getCelebrityDetails(tmdbId).pipe(
-        tap(celebrity => this.cacheCelebrity(celebrity))
+        tap(celebrity => this.cacheCelebrity(celebrity)),
+        catchError(error => {
+          console.error('TMDB getCelebrityDetails failed, trying Wikipedia', error);
+          return this.wikipediaService.getCelebrityDetails(tmdbId).pipe(
+            tap(celebrity => this.cacheCelebrity(celebrity))
+          );
+        })
       );
     }
 
@@ -80,24 +78,35 @@ export class CelebrityService {
       );
     }
 
-    // Fallback to creating a basic celebrity object
     return of(this.createFallbackCelebrity(id));
   }
 
   /**
- * Get celebrity details along with their movie credits
- */
+   * UPDATED: Get celebrity details along with BOTH movie AND TV credits
+   */
   private getCelebrityWithCredits(id: string): Observable<Celebrity> {
     return this.getCelebrityDetails(id).pipe(
       switchMap(celebrity => {
         if (id.startsWith('tmdb_')) {
           const tmdbId = id.replace('tmdb_', '');
-          return this.tmdbService.getCelebrityCredits(tmdbId).pipe(
-            tap(credits => {
-              // Store movie IDs this celebrity has been in
-              const movieIds = credits.cast.map((c: any) => c.id);
+          
+          // Fetch BOTH movie and TV credits
+          return forkJoin({
+            movieCredits: this.tmdbService.getCelebrityCredits(tmdbId).pipe(
+              catchError(() => of({ cast: [] }))
+            ),
+            tvCredits: this.tmdbService.getCelebrityTVCredits(tmdbId).pipe(
+              catchError(() => of({ cast: [] }))
+            )
+          }).pipe(
+            tap(({ movieCredits, tvCredits }) => {
+              const movieIds = movieCredits.cast.map((c: any) => c.id);
+              const tvIds = tvCredits.cast.map((c: any) => c.id);
+              
               this.movieCreditsCache.set(id, movieIds);
-              console.log(`${celebrity.name} has been in ${movieIds.length} movies`);
+              this.tvCreditsCache.set(id, tvIds);
+              
+              console.log(`${celebrity.name} has been in ${movieIds.length} movies and ${tvIds.length} TV shows`);
             }),
             map(() => celebrity),
             catchError(error => {
@@ -111,10 +120,6 @@ export class CelebrityService {
     );
   }
 
-  /**
-   * Find the shortest connection path between two celebrities using BFS
-   * This implements the Six Degrees of Separation algorithm
-   */
   findConnection(startId: string, endId: string): Observable<ConnectionPath | null> {
     console.log(`Finding connection from ${startId} to ${endId}`);
     
@@ -126,7 +131,8 @@ export class CelebrityService {
         console.log('Start celebrity loaded:', start);
         console.log('End celebrity loaded:', end);
         
-        return this.buildConnectionGraph(startId, endId, 3).pipe(
+        return this.buildConnectionGraph(startId, endId, 6).pipe(
+          timeout(60000),
           switchMap(() => {
             console.log('Connection graph built, searching for path...');
             const path = this.findShortestPath(startId, endId);
@@ -155,15 +161,34 @@ export class CelebrityService {
                 );
                 
                 return forkJoin(fetchObservables).pipe(
-                  switchMap(() => this.buildConnectionPathWithMovies(path))
+                  switchMap(() => this.buildConnectionPathWithMedia(path))
                 );
               }
               
-              return this.buildConnectionPathWithMovies(path);
+              return this.buildConnectionPathWithMedia(path);
             }
             
-            console.log('No path found');
-            return of(null);
+            console.log(`No path found in TMDB between ${start.name} and ${end.name}`);
+            console.log(`Graph explored: ${this.connectionGraph.size} celebrities`);
+            
+            const startRegion = this.detectFilmRegion(start);
+            const endRegion = this.detectFilmRegion(end);
+            
+            if (startRegion !== endRegion && startRegion !== 'unknown' && endRegion !== 'unknown') {
+              console.log(`Different film industries detected: ${startRegion} vs ${endRegion}`);
+              console.log('This is likely a legitimate "no connection" case');
+            }
+            
+            console.log('Trying Wikipedia fallback...');
+            return this.findConnectionViaWikipedia(start, end);
+          }),
+          catchError(error => {
+            console.error('TMDB connection search failed, trying Wikipedia', error);
+            return this.getCelebrityDetails(startId).pipe(
+              switchMap(start => this.getCelebrityDetails(endId).pipe(
+                switchMap(end => this.findConnectionViaWikipedia(start, end))
+              ))
+            );
           })
         );
       }),
@@ -174,8 +199,41 @@ export class CelebrityService {
     );
   }
 
-  // ADD THIS NEW METHOD
-  private buildConnectionPathWithMovies(path: string[]): Observable<ConnectionPath | null> {
+  private findConnectionViaWikipedia(start: Celebrity, end: Celebrity): Observable<ConnectionPath | null> {
+    console.log('Attempting Wikipedia connection search...');
+    
+    return this.wikipediaService.findConnection(start.name, end.name).pipe(
+      map(wikiPath => {
+        if (!wikiPath || wikiPath.length === 0) {
+          return null;
+        }
+        
+        const celebrities: Celebrity[] = wikiPath.map((name, index) => ({
+          id: `wiki_${name}`,
+          name: name,
+          profession: ['Actor'],
+          imageUrl: '',
+          source: 'wikipedia' as const
+        }));
+        
+        return {
+          path: celebrities,
+          degrees: celebrities.length - 1,
+          totalConnections: 0,
+          movies: []
+        };
+      }),
+      catchError(error => {
+        console.error('Wikipedia search also failed:', error);
+        return of(null);
+      })
+    );
+  }
+
+  /**
+   * UPDATED: Build connection path with both movies AND TV shows
+   */
+  private buildConnectionPathWithMedia(path: string[]): Observable<ConnectionPath | null> {
     const celebrityPath = path.map(id => this.celebrityCache.get(id)!).filter(c => c);
     
     if (celebrityPath.length !== path.length) {
@@ -183,42 +241,67 @@ export class CelebrityService {
       return of(null);
     }
     
-    // Get movie connections between each pair
-    const movieFetchObservables: Observable<any>[] = [];
+    const mediaFetchObservables: Observable<any>[] = [];
     
     for (let i = 0; i < path.length - 1; i++) {
       const celeb1 = path[i];
       const celeb2 = path[i + 1];
       const connectionKey = this.getConnectionKey(celeb1, celeb2);
-      const movieId = this.movieConnectionsMap.get(connectionKey);
+      const mediaInfo = this.mediaConnectionsMap.get(connectionKey);
       
-      if (movieId) {
-        movieFetchObservables.push(
-          this.tmdbService.getMovieDetails(movieId).pipe(
-            map(movie => ({
-              movie: {
-                id: movieId,
-                title: movie?.title || 'Unknown Movie',
-                year: movie?.release_date ? new Date(movie.release_date).getFullYear() : undefined,
-                poster: movie?.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : undefined
-              },
-              connectingCelebrities: [celeb1, celeb2]
-            })),
-            catchError(() => of({
-              movie: {
-                id: movieId,
-                title: `Movie ${movieId}`,
-                year: undefined,
-                poster: undefined
-              },
-              connectingCelebrities: [celeb1, celeb2]
-            }))
-          )
-        );
+      if (mediaInfo) {
+        if (mediaInfo.type === 'movie') {
+          mediaFetchObservables.push(
+            this.tmdbService.getMovieDetails(mediaInfo.id).pipe(
+              map(movie => ({
+                movie: {
+                  id: mediaInfo.id,
+                  title: movie?.title || 'Unknown Movie',
+                  year: movie?.release_date ? new Date(movie.release_date).getFullYear() : undefined,
+                  poster: movie?.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : undefined
+                },
+                connectingCelebrities: [celeb1, celeb2]
+              })),
+              catchError(() => of({
+                movie: {
+                  id: mediaInfo.id,
+                  title: `Movie ${mediaInfo.id}`,
+                  year: undefined,
+                  poster: undefined
+                },
+                connectingCelebrities: [celeb1, celeb2]
+              }))
+            )
+          );
+        } else {
+          // Fetch TV show details
+          mediaFetchObservables.push(
+            this.tmdbService.getTVShowDetails(mediaInfo.id).pipe(
+              map(tvShow => ({
+                movie: {
+                  id: mediaInfo.id,
+                  title: tvShow?.name || 'Unknown TV Show',
+                  year: tvShow?.first_air_date ? new Date(tvShow.first_air_date).getFullYear() : undefined,
+                  poster: tvShow?.poster_path ? `https://image.tmdb.org/t/p/w200${tvShow.poster_path}` : undefined
+                },
+                connectingCelebrities: [celeb1, celeb2]
+              })),
+              catchError(() => of({
+                movie: {
+                  id: mediaInfo.id,
+                  title: `TV Show ${mediaInfo.id}`,
+                  year: undefined,
+                  poster: undefined
+                },
+                connectingCelebrities: [celeb1, celeb2]
+              }))
+            )
+          );
+        }
       }
     }
     
-    if (movieFetchObservables.length === 0) {
+    if (mediaFetchObservables.length === 0) {
       return of({
         path: celebrityPath,
         degrees: celebrityPath.length - 1,
@@ -227,19 +310,18 @@ export class CelebrityService {
       });
     }
     
-    return forkJoin(movieFetchObservables).pipe(
-      map(movies => ({
+    return forkJoin(mediaFetchObservables).pipe(
+      map(media => ({
         path: celebrityPath,
         degrees: celebrityPath.length - 1,
         totalConnections: this.calculateTotalConnections(path),
-        movies: movies
+        movies: media
       }))
     );
   }
 
   /**
-   * Dynamically build the connection graph by exploring movies
-   * maxDepth controls how many degrees we explore (3 = up to 6 degrees)
+   * UPDATED: Build connection graph from BOTH movies AND TV shows
    */
   private buildConnectionGraph(startId: string, endId: string, maxDepth: number): Observable<void> {
     const explored = new Set<string>();
@@ -247,9 +329,20 @@ export class CelebrityService {
       { id: startId, depth: 0 },
       { id: endId, depth: 0 }
     ];
+    
+    let totalMoviesChecked = 0;
+    let totalTVShowsChecked = 0;
+    let totalConnectionsFound = 0;
+    let failedRequests = 0;
 
     const processQueue = (): Observable<void> => {
       if (queue.length === 0) {
+        console.log(`Graph building complete:
+          - Total movies checked: ${totalMoviesChecked}
+          - Total TV shows checked: ${totalTVShowsChecked}
+          - Total connections found: ${totalConnectionsFound}
+          - Failed requests: ${failedRequests}
+          - Graph size: ${this.connectionGraph.size} celebrities`);
         return of(void 0);
       }
 
@@ -261,56 +354,57 @@ export class CelebrityService {
 
       explored.add(current.id);
 
-      // Get the movies this celebrity has been in
       const movieIds = this.movieCreditsCache.get(current.id) || [];
+      const tvIds = this.tvCreditsCache.get(current.id) || [];
       
-      if (movieIds.length === 0) {
+      if (movieIds.length === 0 && tvIds.length === 0) {
         return processQueue();
       }
 
-      // For each movie, get the cast and add connections
-      const movieObservables = movieIds.slice(0, 20).map(movieId =>
+      const mediaLimit = current.depth <= 2 ? 50 : 30;
+      const moviesToCheck = movieIds.slice(0, mediaLimit);
+      const tvShowsToCheck = tvIds.slice(0, mediaLimit);
+      
+      totalMoviesChecked += moviesToCheck.length;
+      totalTVShowsChecked += tvShowsToCheck.length;
+      
+      // Process movies
+      const movieObservables = moviesToCheck.map(movieId =>
         this.tmdbService.getMovieCredits(movieId).pipe(
           tap(credits => {
-            // Get all actors in this movie
-            const castIds = credits.cast
-              .slice(0, 15)
-              .map(c => `tmdb_${c.id}`);
-
-            // Add connections between all cast members (they worked together)
-            castIds.forEach(castId => {
-              if (!this.connectionGraph.has(castId)) {
-                this.connectionGraph.set(castId, new Set());
-              }
-              
-              // Add all other cast members as connections
-              castIds.forEach(otherId => {
-                if (castId !== otherId) {
-                  this.connectionGraph.get(castId)!.add(otherId);
-                  
-                  // TRACK THE MOVIE THAT CONNECTS THEM
-                  const connectionKey = this.getConnectionKey(castId, otherId);
-                  if (!this.movieConnectionsMap.has(connectionKey)) {
-                    this.movieConnectionsMap.set(connectionKey, movieId);
-                  }
-                }
-              });
-
-              // Add to queue for further exploration
-              if (!explored.has(castId) && current.depth + 1 < maxDepth) {
-                queue.push({ id: castId, depth: current.depth + 1 });
-              }
-            });
+            const castIds = credits.cast.slice(0, 20).map(c => `tmdb_${c.id}`);
+            totalConnectionsFound += this.addConnections(castIds, movieId, 'movie', explored, current.depth, maxDepth, queue);
           }),
           catchError(error => {
-            console.error(`Failed to load movie credits for movie ${movieId}`, error);
+            if (error.status !== 404) {
+              console.warn(`Failed to load movie ${movieId}: ${error.status}`);
+            }
+            failedRequests++;
             return of(null);
           })
         )
       );
 
-      // Process all movies, then continue with queue
-      return forkJoin(movieObservables.length > 0 ? movieObservables : [of(null)]).pipe(
+      // Process TV shows
+      const tvObservables = tvShowsToCheck.map(tvId =>
+        this.tmdbService.getTVShowCredits(tvId).pipe(
+          tap(credits => {
+            const castIds = credits.cast.slice(0, 20).map(c => `tmdb_${c.id}`);
+            totalConnectionsFound += this.addConnections(castIds, tvId, 'tv', explored, current.depth, maxDepth, queue);
+          }),
+          catchError(error => {
+            if (error.status !== 404) {
+              console.warn(`Failed to load TV show ${tvId}: ${error.status}`);
+            }
+            failedRequests++;
+            return of(null);
+          })
+        )
+      );
+
+      const allObservables = [...movieObservables, ...tvObservables];
+      
+      return forkJoin(allObservables.length > 0 ? allObservables : [of(null)]).pipe(
         switchMap(() => processQueue())
       );
     };
@@ -318,16 +412,49 @@ export class CelebrityService {
     return processQueue();
   }
 
-  // ADD THIS HELPER METHOD
+  /**
+   * NEW: Helper method to add connections to the graph
+   */
+  private addConnections(
+    castIds: string[], 
+    mediaId: number, 
+    mediaType: 'movie' | 'tv',
+    explored: Set<string>,
+    currentDepth: number,
+    maxDepth: number,
+    queue: { id: string; depth: number }[]
+  ): number {
+    let connectionsAdded = 0;
+    
+    castIds.forEach(castId => {
+      if (!this.connectionGraph.has(castId)) {
+        this.connectionGraph.set(castId, new Set());
+      }
+      
+      castIds.forEach(otherId => {
+        if (castId !== otherId) {
+          this.connectionGraph.get(castId)!.add(otherId);
+          connectionsAdded++;
+          
+          const connectionKey = this.getConnectionKey(castId, otherId);
+          if (!this.mediaConnectionsMap.has(connectionKey)) {
+            this.mediaConnectionsMap.set(connectionKey, { id: mediaId, type: mediaType });
+          }
+        }
+      });
+
+      if (!explored.has(castId) && currentDepth + 1 < maxDepth) {
+        queue.push({ id: castId, depth: currentDepth + 1 });
+      }
+    });
+    
+    return connectionsAdded;
+  }
+
   private getConnectionKey(celeb1: string, celeb2: string): string {
-    // Create a consistent key regardless of order
     return [celeb1, celeb2].sort().join('_');
   }
 
-  /**
-   * Find shortest path using Breadth-First Search (BFS)
-   * This guarantees the shortest connection (fewest degrees of separation)
-   */
   private findShortestPath(startId: string, endId: string): string[] | null {
     if (startId === endId) {
       return [startId];
@@ -384,5 +511,17 @@ export class CelebrityService {
       }
       return total;
     }, 0);
+  }
+
+  private detectFilmRegion(celebrity: Celebrity): string {
+    const name = celebrity.name.toLowerCase();
+    const profession = celebrity.profession.join(' ').toLowerCase();
+    
+    const southAsianNames = ['khan', 'kapoor', 'kumar', 'aziz', 'malik', 'shah', 'ahmed'];
+    if (southAsianNames.some(n => name.includes(n))) {
+      return 'south-asian';
+    }
+    
+    return celebrity.source === 'tmdb' ? 'hollywood' : 'unknown';
   }
 }
