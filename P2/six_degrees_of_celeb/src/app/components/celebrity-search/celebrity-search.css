@@ -166,3 +166,44 @@
   border-color: #4a9eff !important;
   color: #aaa !important;
 }
+
+
+@media (max-width: 768px) {
+  .search-input{
+    font-size: 14px;
+    padding: 8px;
+    height: 36px;
+  }
+
+  .label {
+    font-size: 14px;
+    top: 8px;
+    left: 8px;
+  }
+}
+
+/*Result Dropdown*/
+@media (max-width: 768px){
+  .search-results {
+    max-height: 250px;
+  }
+
+  .search-result-item {
+    padding: 8px;
+  }
+
+  .result-image {
+    width: 40px;
+    height: 40px;
+    margin-right: 8px;
+  }
+
+  .result-info strong {
+    font-size: 0.9em;
+  }
+
+  .result-info span {
+    font-size: 0.8em;
+  }
+  
+}

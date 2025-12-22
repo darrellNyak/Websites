@@ -36,6 +36,7 @@
     width: 20%;
 }
 
+
 .controls{
     display: flex;
     justify-content: center;
@@ -96,6 +97,7 @@ body.dark-mode .theme-toggle {
 }
 
 .app-footer {
+   
   margin-top: 60px;
   padding: 40px 20px;
   background: rgba(0, 0, 0, 0.05);
@@ -120,14 +122,12 @@ body.dark-mode .app-footer {
 .tmdb-logo {
   height: 40px;
   width: auto;
-  /* If the image has a transparent background, this ensures it looks good in dark mode */
   background: white;
   padding: 8px 16px;
   border-radius: 4px;
 }
 
 body.dark-mode .tmdb-logo {
-  /* The white background ensures the logo is always visible in dark mode */
   background: white;
 }
 
@@ -140,4 +140,160 @@ body.dark-mode .tmdb-logo {
 
 body.dark-mode .tmdb-attribution p {
   color: #aaa;
+}
+
+/* Mobile Adjustments */
+
+/*Padding*/
+@media (max-width: 768px) {
+    .app-container{
+        padding: 10px;
+    }
+}
+
+/*Headers*/
+@media (max-width: 768px) {
+    .app-header h1 {
+        font-size: 2.5em;
+        padding: 10px 0;
+    }
+
+    .app-header p {
+        font-size: 1.2em;
+        padding: 0 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .app-deader h1 {
+        font-size: 2em;
+    }
+
+    .app-header p {
+        font-size: 1em;
+    }
+}
+
+/*Search section*/
+@media (max-width: 768px) {
+    .search-sections{
+        flex-direction: column;
+        gap: 30px;
+    }
+}
+
+@media (max-width: 768px) {
+    .search-section {
+        max-width: 100%;
+    }
+}
+
+/*Celebrity Item*/
+
+/* Ipad/Tablet */
+@media (max-width: 1024px) {
+    .celebrity-item {
+        width: calc(33.333% - 14px)
+    }
+}
+
+@media (max-width: 768px) {
+    .celebrity-grid{
+        gap: 15px;
+    }
+
+    .celebrity-item {
+        width: calc(50% - 7.5px);
+    }
+}
+
+@media (max-width: 480px) {
+    .celebrity-grid{
+        gap: 10px;
+    }
+
+    .celebrity-item {
+        width: 100%;
+    }
+}
+
+/*Controls*/
+
+@media (max-width: 768px) {
+    .controls{
+        gap: 10px;
+    }
+
+    .controls button {
+        padding: 10px 20px;
+        font-size: 0.9em;
+        flex: 1;
+        min-width: 140px;
+    }
+}
+
+@media (max-width: 480px) {
+    .controls button{
+        width: 100%;
+        min-width: auto;
+    }
+}
+
+/*Theme Change*/
+
+@media (max-width: 768px) {
+    .theme-toggle {
+        top: 10px;
+        right: 10px;
+        padding: 8px 16px;
+        font-size: 1em;
+    }
+}
+
+@media (max-width: 480px) {
+    .theme-toggle {
+        padding: 6px 12px;
+        font-size: 0.9em;
+    }
+}
+
+/*Error messages*/
+@media(max-width: 768px) {
+    .error-message {
+        padding: 12px;
+        font-size: 0.9em;
+    }
+}
+
+/*Popular celebrity section*/
+@media (max-width: 768px) {
+    .popular-celebrities {
+        margin-top: 30px;
+    }
+
+    .popular-clecbrities h3 {
+        font-size: 1.5em;
+    }
+}
+
+/*Footer*/
+@media (max-width: 768px) {
+    .app-footer {
+        margin-top: 40px;
+        padding: 30px 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .tmdb-logo{
+        height: 30px;
+        padding: 6px 12px;
+    }
+}
+
+@media (max-width: 768px) {
+    .tmdb-attribution p {
+        font-size: 0.8em;
+        padding: 0 10px;
+    }
 }

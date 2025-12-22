@@ -21,3 +21,56 @@
     height: 600px;
     width: 450px;
 }
+
+/*Mobile*/
+
+@media (max-width: 768px) {
+    .connection-path {
+        padding: 15px;
+    }
+
+    .connection-step {
+        padding: 15px;
+    }
+
+    .step-number {
+        width: 30px;
+        height: 30px;
+        font-size: 0.9em;
+    }
+
+    .celebrity-details h4 {
+        font-size: 1em;
+    }
+
+    .celevrity-details p {
+        font-size: 0.85em;
+    }
+
+    .movie-connection {
+        padding: 10px;
+        margin: 10px 0;
+    }
+
+    .movie-title {
+        font-size: 0.9em;
+    }
+}
+
+@media (max-width: 480px) {
+    .connection-path {
+        padding: 10px;
+    }
+
+    .connection-step {
+        flex-direction: columnn;
+        text-align: center;
+    }
+
+    .step-number {
+        position: relative;
+        top: auto;
+        left: auto;
+        margin-bottom: 10px;
+    }
+}

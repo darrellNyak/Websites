@@ -1,1 +1,17 @@
-<p>loading-spinner works!</p>
+<div class="loading-container" *ngIf="loading">
+  <div class="spinner center">
+    <div class="spinner-blade"></div>
+    <div class="spinner-blade"></div>
+    <div class="spinner-blade"></div>
+    <div class="spinner-blade"></div>
+    <div class="spinner-blade"></div>
+    <div class="spinner-blade"></div>
+    <div class="spinner-blade"></div>
+    <div class="spinner-blade"></div>
+    <div class="spinner-blade"></div>
+    <div class="spinner-blade"></div>
+    <div class="spinner-blade"></div>
+    <div class="spinner-blade"></div>
+  </div>
+  <p class="loading-message" *ngIf="message">{{ message }}</p>
+</div>

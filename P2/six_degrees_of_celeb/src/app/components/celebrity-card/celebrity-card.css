@@ -4,3 +4,73 @@
     object-fit: cover;
     border-radius: 10px;
 }
+
+.celebrity-card {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s;
+    height: 500px;
+    width: 200px;
+}
+
+body.dark-mode .celebrity-card {
+    box-shadow: 0 4px 6px rgba(42, 86, 86, 0.3);
+}
+
+.celebrity-card:hover {
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+.celebrity-info {
+    padding: 15px;
+}
+
+.celebrity-name {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.celebrity-profession {
+    font-size: 0.9em;
+    color: #666;
+    margin: 0;
+}
+
+body.dark-mode .celebrity-profession {
+    color: #aaa;
+}
+
+/*Mobile*/
+
+@media (max-width: 768px) {
+    .celebrity-info{
+        padding: 12px;
+    }
+
+    .celebrity-name {
+        font-size: 1em;
+    }
+
+    .celebrity-profession {
+        font-size: 0.85em;
+    }
+}
+
+@media (max-width: 480px) {
+    .celebrity-info{
+        padding: 10px;
+    }
+
+    .celebrity-name {
+        font-size: 0.95em;
+    }
+
+    .celebrity-profession {
+        font-size: 0.8em;
+    }
+}
