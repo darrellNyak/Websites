@@ -5,8 +5,17 @@
 <div class="app-container">
   <header class="app-header">
     <h1>🎬 Six Degrees of Celebrity</h1>
-    <p>Discover how any two celebrities are connected through the magic of six degrees of separation!</p>
+    <p>
+      Discover how any two celebrities are connected through the magic of six degrees of separation!
+    </p>
   </header>
+
+  <div class="disclaimer-banner">
+    <p>
+      Connections are found within a maximum of 6 degrees of separation, algorithm may not find
+      all possible connections.
+    </p>
+  </div>
 
   <main class="main-content">
     <div class="search-sections">
@@ -26,27 +35,44 @@
         <app-celebrity-search
           (celebritySelected)="onEndCelebritySelected($event)"
         ></app-celebrity-search>
-        <app-celebrity-card
-          *ngIf="endCelebrity"
-          [celebrity]="endCelebrity"
-        ></app-celebrity-card>
+        <app-celebrity-card *ngIf="endCelebrity" [celebrity]="endCelebrity"></app-celebrity-card>
       </div>
     </div>
 
-    <app-loading-spinner 
-      [loading]="loading" 
-      message="Finding connection...">
-    </app-loading-spinner>
+    <app-loading-spinner [loading]="loading" message="Finding connection..."> </app-loading-spinner>
 
     <div *ngIf="error" class="error-message">
       {{ error }}
+    </div>
+
+    <div
+      *ngIf="!connectionPath && !loading && startCelebrity && endCelebrity && !error"
+      class="no-connection"
+    >
+      <h3>No Connection Found at {{ currentSearchDepth }} Degrees</h3>
+      <p *ngIf="canExpandSearch">
+        We searched {{ currentSearchDepth }} degrees of separation but couldn't find a connection.
+      </p>
+      <ul *ngIf="canExpandSearch">
+        <li>They work in different film industries (e.g Hollywood vs Bollywood)</li>
+        <li>The connection requires more than {{ currentSearchDepth }} degrees</li>
+        <li>TMDB database has incomplete imformation</li>
+      </ul>
+
+      <button *ngIf="canExpandSearch" (click)="expandSearch()" class="expand-button">
+        Search Deeper ({{ currentSearchDepth + 1 }} Degrees)
+      </button>
+
+      <p *ngIf="!canExpandSearch && currentSearchDepth >= maxSearchDepth" class="max-depth-message">
+        Already searched maximum depth ({{ maxSearchDepth }} Degrees).
+      </p>
     </div>
 
     <div class="controls" *ngIf="startCelebrity || endCelebrity">
       <button (click)="swapCelebrities()" [disabled]="!startCelebrity || !endCelebrity">
         🔄 Swap Celebrities
       </button>
-      <button (click)="resetSearch()"> Reset Search</button>
+      <button (click)="resetSearch()">Reset Search</button>
     </div>
 
     <app-connection-path [connectionPath]="connectionPath"></app-connection-path>
@@ -57,7 +83,11 @@
         <div
           *ngFor="let celebrity of popularCelebrities"
           class="celebrity-item"
-          (click)="!startCelebrity ? onStartCelebritySelected(celebrity) : onEndCelebritySelected(celebrity)"
+          (click)="
+            !startCelebrity
+              ? onStartCelebritySelected(celebrity)
+              : onEndCelebritySelected(celebrity)
+          "
         >
           <app-celebrity-card [celebrity]="celebrity"></app-celebrity-card>
         </div>
@@ -65,12 +95,11 @@
     </div>
 
     <footer class="app-footer">
-    <div class="tmdb-attribution">
-      <img src="assets/images/tmdb-logo.svg" alt="TMDB Logo" class="tmdb-logo">
-      <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
-      <p> Maintained by Darrell Nyakaana</p>
-    </div>
-  </footer>
-
+      <div class="tmdb-attribution">
+        <img src="assets/images/tmdb-logo.svg" alt="TMDB Logo" class="tmdb-logo" />
+        <p>This product uses the TMDB API but is not endorsed or certified by TMDB.</p>
+        <p>Maintained by Darrell Nyakaana</p>
+      </div>
+    </footer>
   </main>
 </div>

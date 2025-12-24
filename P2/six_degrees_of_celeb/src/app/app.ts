@@ -10,14 +10,8 @@ import { LoadingSpinner } from './components/loading-spinner/loading-spinner';
 @Component({
   selector: 'app-root',
   templateUrl: './app.html',
-  imports: [
-    CommonModule,
-    CelebritySearch, 
-    ConnectionPathComponent,
-    CelebrityCard,
-    LoadingSpinner
-  ],  
-  styleUrls: ['./app.css']
+  imports: [CommonModule, CelebritySearch, ConnectionPathComponent, CelebrityCard, LoadingSpinner],
+  styleUrls: ['./app.css'],
 })
 export class App implements OnInit {
   title = 'Six Degrees of Celebrity';
@@ -26,9 +20,13 @@ export class App implements OnInit {
   connectionPath: ConnectionPath | null = null;
   popularCelebrities: Celebrity[] = [];
   isDarkMode = false;
-  
+
   loading = false;
   error: string | null = null;
+  //New
+  currentSearchDepth = 3; // Start with 3 degrees
+  maxSearchDepth = 6; // Maximum depth allowed
+  canExpandSearch = false; // Show expand button when no connection found
 
   constructor(private celebrityService: CelebrityService) {}
 
@@ -43,7 +41,7 @@ export class App implements OnInit {
 
   toggleTheme() {
     this.isDarkMode = !this.isDarkMode;
-    
+
     if (this.isDarkMode) {
       document.body.classList.add('dark-mode');
       localStorage.setItem('theme', 'dark');
@@ -62,30 +60,53 @@ export class App implements OnInit {
     this.endCelebrity = celebrity;
     this.findConnection();
   }
-
-  findConnection(): void {
+  /*NEW */
+  findConnection(depth?: number): void {
     if (this.startCelebrity && this.endCelebrity) {
-      console.log("Finding connection between", this.startCelebrity.name, "and", this.endCelebrity.name);
+      const searchDepth = depth || this.currentSearchDepth;
+      console.log(
+        `Finding connection between ${this.startCelebrity.name} and ${this.endCelebrity.name} at depth ${searchDepth}`
+      );
+
       this.loading = true;
       this.error = null;
       this.connectionPath = null;
+      this.canExpandSearch = false;
 
-      this.celebrityService.findConnection(
-        this.startCelebrity.id,
-        this.endCelebrity.id
-      ).subscribe({
-        next: (path) => {
-          console.log("Connection path found:", path);
-          this.connectionPath = path;
-          this.loading = false;
-        },
-        error: (error) => {
-          console.log("Error finding connection:", error);
-          this.error = 'Failed to find connection. Please try again.';
-          this.loading = false;
-          console.error('Connection search error:', error);
-        }
-      });
+      this.celebrityService
+        .findConnectionWithDepth(this.startCelebrity.id, this.endCelebrity.id, searchDepth)
+        .subscribe({
+          next: (path) => {
+            console.log('Connection path found:', path);
+            this.connectionPath = path;
+            this.loading = false;
+
+            // If no path found and we haven't reached max depth, allow expansion
+            if (!path && searchDepth < this.maxSearchDepth) {
+              this.canExpandSearch = true;
+              this.currentSearchDepth = searchDepth;
+            }
+          },
+          error: (error) => {
+            console.log('Error finding connection:', error);
+            this.error = 'Failed to find connection. Please try again.';
+            this.loading = false;
+            console.error('Connection search error:', error);
+          },
+        });
+    }
+  }
+
+  //*NEW */ ADD this new method (after findConnection)
+  expandSearch(): void {
+    if (this.currentSearchDepth < this.maxSearchDepth) {
+      this.currentSearchDepth++;
+      console.log(`Expanding search to depth ${this.currentSearchDepth}`);
+
+      // Clear the connection graph to rebuild with deeper search
+      this.celebrityService.clearConnectionGraph();
+
+      this.findConnection(this.currentSearchDepth);
     }
   }
 
@@ -96,7 +117,7 @@ export class App implements OnInit {
       },
       error: (error) => {
         console.error('Failed to load popular celebrities:', error);
-      }
+      },
     });
   }
 
@@ -105,10 +126,14 @@ export class App implements OnInit {
     this.findConnection();
   }
 
+  /*NEW */
   resetSearch(): void {
     this.startCelebrity = null;
     this.endCelebrity = null;
     this.connectionPath = null;
     this.error = null;
+    this.currentSearchDepth = 3; // Reset to initial depth
+    this.canExpandSearch = false;
+    this.celebrityService.clearConnectionGraph();
   }
 }

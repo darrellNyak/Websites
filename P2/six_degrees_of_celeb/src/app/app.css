@@ -142,6 +142,102 @@ body.dark-mode .tmdb-attribution p {
   color: #aaa;
 }
 
+.disclaimer-banner{
+    border-radius: 40px;
+    padding: 15px 20px;
+    margin: 20px 0;
+    text-align: center;
+}
+
+body.dark-mode .disclaimer-banner {
+    background: #664d03;
+    border-color: #997404;
+    color: #fff3cd;
+}
+
+.disclaimer-banner p {
+    margin: 0;
+    font-size: 0.95em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.no-connection{
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    margin: 30px 0;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+body.dark-mode .no-connection{
+    background: #2a2a2a;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.no-connection h3{
+    color: #ff6b6b;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+}
+
+body.dark-mode .no-connection h3{
+    color: #ff8787;
+}
+
+.no-connection p{
+    margin: 15px 0;
+    color: grey;
+    line-height: 1.6;  
+}
+
+body.dark-mode .no-connection p{
+    color: #aaa;
+}
+
+.no-connection ul{
+    text-align: left;
+    max-width: 500px;
+    margin: 20px auto;
+    color: grey;
+    line-height: 1.8;
+}
+
+.expand-button{
+    background: linear-gradient(135deg, #e7eae5 0%, #3c3e3b 100%);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-top: 20px;
+}
+
+.expand-button:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 8px 12px rgba(102, 126, 234, 0.4);
+}
+
+.expand-button:active{
+    transform: translateY(0);
+}
+
+body.dark-mode .expand-button{
+    background: linear-gradient(135deg, #4a9eff 0%, #667eea 100%);
+}
+
+.max-depth-message{
+    font-style: italic;
+    color: #999;
+    margin-top: 20px;
+}
+
 /* Mobile Adjustments */
 
 /*Padding*/
@@ -295,5 +391,32 @@ body.dark-mode .tmdb-attribution p {
     .tmdb-attribution p {
         font-size: 0.8em;
         padding: 0 10px;
+    }
+}
+
+/*Disclaimer*/
+@media (max-width: 768px) {
+    .disclaimer-banner{
+        padding: 12px 15px;
+    }
+
+    .disclaimer-banner p{
+        font-size: 0.85em;
+    }
+}
+
+/*No Connection Message*/
+@media (max-width: 768px){
+    .no-connection{
+        padding: 20px;
+    }
+
+    .no-connection h3{
+        font-size: 1.2em;
+    }
+
+    .expand-button{
+        padding: 12px 24px;
+        font-size: 1em;
     }
 }

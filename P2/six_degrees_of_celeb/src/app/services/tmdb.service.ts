@@ -159,7 +159,7 @@ export class TmdbService {
   }
 
   /**
-   * NEW: Get details for a specific TV show
+   * Get details for a specific TV show
    */
   getTVShowDetails(tvShowId: number): Observable<any> {
     const url = `${this.BASE_URL}/tv/${tvShowId}?api_key=${this.API_KEY}`;

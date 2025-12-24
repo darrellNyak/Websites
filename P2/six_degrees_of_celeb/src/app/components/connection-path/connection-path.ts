@@ -7,7 +7,7 @@ import { CelebrityCard } from '../celebrity-card/celebrity-card';
   selector: 'app-connection-path',
   templateUrl: './connection-path.html',
   styleUrls: ['./connection-path.css'],
-  imports: [CommonModule, CelebrityCard, ConnectionPath]
+  imports: [CommonModule, CelebrityCard]
 })
 export class ConnectionPath {
   @Input() connectionPath: ConnectionPathModel | null = null;
