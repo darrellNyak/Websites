@@ -7,20 +7,15 @@ import { Celebrity } from '../models/celebrity';
   providedIn: 'root'
 })
 export class TmdbService {
-  private readonly API_KEY = '4753b9b7963ea7a28318fa95acc8f1e2';
-  private readonly BASE_URL = 'https://api.themoviedb.org/3';
+  private readonly API_BASE_URL = 'http://localhost:3000/api/tmdb';
   private readonly IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
   constructor(private http: HttpClient) {}
 
   searchCelebrities(query: string, page: number = 1): Observable<{ celebrities: Celebrity[], total: number }> {
-    const url = `${this.BASE_URL}/search/person?api_key=${this.API_KEY}&query=${encodeURIComponent(query)}&page=${page}`;
+    const url = `${this.API_BASE_URL}/search?query=${encodeURIComponent(query)}&page=${page}`;
     
-    return this.http.get<any>(url).pipe(
-      map(response => ({
-        celebrities: response.results.map((person: any) => this.mapTmdbToCelebrity(person)),
-        total: response.total_results
-      })),
+    return this.http.get<{ celebrities: Celebrity[], total: number, page: number }>(url).pipe(
       catchError(error => {
         console.error('TMDB search error:', error);
         return of({ celebrities: [], total: 0 });
@@ -29,10 +24,9 @@ export class TmdbService {
   }
 
   getPopularCelebrities(): Observable<Celebrity[]> {
-    const url = `${this.BASE_URL}/person/popular?api_key=${this.API_KEY}`;
+    const url = `${this.API_BASE_URL}/popular`;
     
-    return this.http.get<any>(url).pipe(
-      map(response => response.results.map((person: any) => this.mapTmdbToCelebrity(person))),
+    return this.http.get<Celebrity[]>(url).pipe(
       catchError(error => {
         console.error('TMDB popular celebrities error:', error);
         return of([]);
@@ -41,10 +35,11 @@ export class TmdbService {
   }
 
   getCelebrityDetails(id: string): Observable<Celebrity> {
-    const url = `${this.BASE_URL}/person/${id}?api_key=${this.API_KEY}`;
+    // Remove 'tmdb_' prefix if present
+    const tmdbId = id.replace('tmdb_', '');
+    const url = `${this.API_BASE_URL}/person/${tmdbId}`;
     
-    return this.http.get<any>(url).pipe(
-      map(person => this.mapTmdbToCelebrity(person, true)),
+    return this.http.get<Celebrity>(url).pipe(
       catchError(error => {
         console.error(`TMDB celebrity details error for ID ${id}:`, error);
         throw error;
@@ -56,21 +51,11 @@ export class TmdbService {
    * Get combined credits (both movies and TV shows) for a celebrity
    */
   getCelebrityCredits(id: string): Observable<{ cast: any[], crew: any[] }> {
-    const url = `${this.BASE_URL}/person/${id}/combined_credits?api_key=${this.API_KEY}`;
+    // Remove 'tmdb_' prefix if present
+    const tmdbId = id.replace('tmdb_', '');
+    const url = `${this.API_BASE_URL}/person/${tmdbId}/credits`;
     
-    return this.http.get<any>(url).pipe(
-      map(response => ({
-        cast: (response.cast || [])
-          .filter((c: any) => c.media_type === 'movie') // Only movies
-          .map((c: any) => ({
-            ...c,
-            mediaType: 'movie'
-          })),
-        crew: (response.crew || []).map((c: any) => ({
-          ...c,
-          mediaType: c.media_type
-        }))
-      })),
+    return this.http.get<{ cast: any[], crew: any[] }>(url).pipe(
       catchError(error => {
         console.error(`TMDB celebrity credits error for ID ${id}:`, error);
         return of({ cast: [], crew: [] });
@@ -82,23 +67,11 @@ export class TmdbService {
    * NEW: Get ONLY TV credits for a celebrity
    */
   getCelebrityTVCredits(id: string): Observable<{ cast: any[], crew: any[] }> {
-    const url = `${this.BASE_URL}/person/${id}/combined_credits?api_key=${this.API_KEY}`;
+    // Remove 'tmdb_' prefix if present
+    const tmdbId = id.replace('tmdb_', '');
+    const url = `${this.API_BASE_URL}/person/${tmdbId}/tv-credits`;
     
-    return this.http.get<any>(url).pipe(
-      map(response => ({
-        cast: (response.cast || [])
-          .filter((c: any) => c.media_type === 'tv') // Only TV shows
-          .map((c: any) => ({
-            ...c,
-            mediaType: 'tv'
-          })),
-        crew: (response.crew || [])
-          .filter((c: any) => c.media_type === 'tv')
-          .map((c: any) => ({
-            ...c,
-            mediaType: 'tv'
-          }))
-      })),
+    return this.http.get<{ cast: any[], crew: any[] }>(url).pipe(
       catchError(error => {
         console.error(`TMDB TV credits error for ID ${id}:`, error);
         return of({ cast: [], crew: [] });
@@ -110,13 +83,9 @@ export class TmdbService {
    * Get credits for a specific movie
    */
   getMovieCredits(movieId: number): Observable<{ cast: any[], crew: any[] }> {
-    const url = `${this.BASE_URL}/movie/${movieId}/credits?api_key=${this.API_KEY}`;
+    const url = `${this.API_BASE_URL}/movie/${movieId}/credits`;
     
-    return this.http.get<any>(url).pipe(
-      map(response => ({
-        cast: response.cast || [],
-        crew: response.crew || []
-      })),
+    return this.http.get<{ cast: any[], crew: any[] }>(url).pipe(
       catchError(error => {
         console.error(`TMDB movie credits error for movie ${movieId}:`, error);
         throw error;
@@ -128,13 +97,9 @@ export class TmdbService {
    * NEW: Get credits for a specific TV show
    */
   getTVShowCredits(tvId: number): Observable<{ cast: any[], crew: any[] }> {
-    const url = `${this.BASE_URL}/tv/${tvId}/credits?api_key=${this.API_KEY}`;
+    const url = `${this.API_BASE_URL}/tv/${tvId}/credits`;
     
-    return this.http.get<any>(url).pipe(
-      map(response => ({
-        cast: (response.cast || []).map((c: any) => ({ ...c, mediaType: 'tv' })),
-        crew: response.crew || []
-      })),
+    return this.http.get<{ cast: any[], crew: any[] }>(url).pipe(
       catchError(error => {
         if (error.status !== 404) {
           console.error(`TMDB TV credits error for show ${tvId}:`, error);
@@ -148,7 +113,7 @@ export class TmdbService {
    * Get details for a specific movie
    */
   getMovieDetails(movieId: number): Observable<any> {
-    const url = `${this.BASE_URL}/movie/${movieId}?api_key=${this.API_KEY}`;
+    const url = `${this.API_BASE_URL}/movie/${movieId}`;
     
     return this.http.get<any>(url).pipe(
       catchError(error => {
@@ -162,7 +127,7 @@ export class TmdbService {
    * Get details for a specific TV show
    */
   getTVShowDetails(tvShowId: number): Observable<any> {
-    const url = `${this.BASE_URL}/tv/${tvShowId}?api_key=${this.API_KEY}`;
+    const url = `${this.API_BASE_URL}/tv/${tvShowId}`;
     
     return this.http.get<any>(url).pipe(
       catchError(error => {
@@ -170,37 +135,5 @@ export class TmdbService {
         return of(null);
       })
     );
-  }
-
-  private mapTmdbToCelebrity(person: any, includeDetails: boolean = false): Celebrity {
-    const professions = this.getProfessionsFromKnownFor(person.known_for || person.known_for_department);
-    
-    return {
-      id: `tmdb_${person.id}`,
-      name: person.name,
-      profession: professions.length > 0 ? professions : [person.known_for_department || 'Actor'],
-      imageUrl: person.profile_path ? `${this.IMAGE_BASE_URL}${person.profile_path}` : '/assets/images/placeholder.jpg',
-      description: includeDetails ? person.biography : undefined,
-      popularity: person.popularity,
-      source: 'tmdb'
-    };
-  }
-
-  private getProfessionsFromKnownFor(knownFor: any): string[] {
-    const professions = new Set<string>();
-    
-    if (Array.isArray(knownFor)) {
-      knownFor.forEach((item: any) => {
-        if (item.media_type === 'movie') {
-          professions.add('Actor');
-        } else if (item.media_type === 'tv') {
-          professions.add('TV Actor');
-        }
-      });
-    } else if (typeof knownFor === 'string') {
-      professions.add(knownFor);
-    }
-    
-    return Array.from(professions);
   }
 }

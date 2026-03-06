@@ -1,0 +1,22 @@
+{
+  "name": "six-degrees-backend",
+  "version": "1.0.0",
+  "description": "Backend API for Six Degrees of Celebrity",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "axios": "^1.7.7"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/cors": "^2.8.17",
+    "@types/node": "^20.17.19"
+  }
+}
