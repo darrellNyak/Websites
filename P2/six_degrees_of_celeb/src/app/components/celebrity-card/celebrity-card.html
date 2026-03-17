@@ -2,6 +2,8 @@
   <img [src]="celebrity.imageUrl" [alt]="celebrity.name" class="celebrity-image">
   <div class="celebrity-info">
     <h4>{{ celebrity.name }}</h4>
-    <p>{{ celebrity.profession }}</p>
+    <ul class="profession-list" *ngIf="celebrity.profession?.length">
+      <li *ngFor="let p of celebrity.profession">{{ p }}</li>
+    </ul>
   </div>
 </div>

@@ -6,11 +6,20 @@ import { CelebritySearch } from './components/celebrity-search/celebrity-search'
 import { ConnectionPath as ConnectionPathComponent } from './components/connection-path/connection-path';
 import { CelebrityCard } from './components/celebrity-card/celebrity-card';
 import { LoadingSpinner } from './components/loading-spinner/loading-spinner';
+import { ToastContainer } from './components/toast-container/toast-container';
+import { ToastService } from './services/toast.service';
 
 @Component({
   selector: 'app-root',
   templateUrl: './app.html',
-  imports: [CommonModule, CelebritySearch, ConnectionPathComponent, CelebrityCard, LoadingSpinner],
+  imports: [
+    CommonModule,
+    CelebritySearch,
+    ConnectionPathComponent,
+    CelebrityCard,
+    LoadingSpinner,
+    ToastContainer,
+  ],
   styleUrls: ['./app.css'],
 })
 export class App implements OnInit {
@@ -23,12 +32,11 @@ export class App implements OnInit {
 
   loading = false;
   error: string | null = null;
-  //New
-  currentSearchDepth = 3; // Start with 3 degrees
-  maxSearchDepth = 6; // Maximum depth allowed
-  canExpandSearch = false; // Show expand button when no connection found
 
-  constructor(private celebrityService: CelebrityService) {}
+  constructor(
+    private celebrityService: CelebrityService,
+    private toastService: ToastService
+  ) { }
 
   ngOnInit(): void {
     this.loadPopularCelebrities();
@@ -51,41 +59,51 @@ export class App implements OnInit {
     }
   }
 
+  private showPopup(message: string): void {
+    this.toastService.show(message, { type: 'warning', title: 'Heads up' });
+  }
+
   onStartCelebritySelected(celebrity: Celebrity): void {
+    if (this.endCelebrity && this.endCelebrity.id === celebrity.id) {
+      this.showPopup("Please choose two different celebrities — you can't pick the same person twice.");
+      return;
+    }
     this.startCelebrity = celebrity;
     this.findConnection();
   }
 
   onEndCelebritySelected(celebrity: Celebrity): void {
+    if (this.startCelebrity && this.startCelebrity.id === celebrity.id) {
+      this.showPopup("Please choose two different celebrities — you can't pick the same person twice.");
+      return;
+    }
     this.endCelebrity = celebrity;
     this.findConnection();
   }
-  /*NEW */
-  findConnection(depth?: number): void {
+
+  findConnection(): void {
     if (this.startCelebrity && this.endCelebrity) {
-      const searchDepth = depth || this.currentSearchDepth;
+      if (this.startCelebrity.id === this.endCelebrity.id) {
+        this.showPopup("Please choose two different celebrities — you can't pick the same person twice.");
+        return;
+      }
+
       console.log(
-        `Finding connection between ${this.startCelebrity.name} and ${this.endCelebrity.name} at depth ${searchDepth}`
+        `Finding connection between ${this.startCelebrity.name} and ${this.endCelebrity.name}`
       );
 
       this.loading = true;
       this.error = null;
       this.connectionPath = null;
-      this.canExpandSearch = false;
+      this.celebrityService.clearConnectionGraph();
 
       this.celebrityService
-        .findConnectionWithDepth(this.startCelebrity.id, this.endCelebrity.id, searchDepth)
+        .findConnection(this.startCelebrity.id, this.endCelebrity.id)
         .subscribe({
           next: (path) => {
             console.log('Connection path found:', path);
             this.connectionPath = path;
             this.loading = false;
-
-            // If no path found and we haven't reached max depth, allow expansion
-            if (!path && searchDepth < this.maxSearchDepth) {
-              this.canExpandSearch = true;
-              this.currentSearchDepth = searchDepth;
-            }
           },
           error: (error) => {
             console.log('Error finding connection:', error);
@@ -94,19 +112,6 @@ export class App implements OnInit {
             console.error('Connection search error:', error);
           },
         });
-    }
-  }
-
-  //*NEW */ ADD this new method (after findConnection)
-  expandSearch(): void {
-    if (this.currentSearchDepth < this.maxSearchDepth) {
-      this.currentSearchDepth++;
-      console.log(`Expanding search to depth ${this.currentSearchDepth}`);
-
-      // Clear the connection graph to rebuild with deeper search
-      this.celebrityService.clearConnectionGraph();
-
-      this.findConnection(this.currentSearchDepth);
     }
   }
 
@@ -126,14 +131,11 @@ export class App implements OnInit {
     this.findConnection();
   }
 
-  /*NEW */
   resetSearch(): void {
     this.startCelebrity = null;
     this.endCelebrity = null;
     this.connectionPath = null;
     this.error = null;
-    this.currentSearchDepth = 3; // Reset to initial depth
-    this.canExpandSearch = false;
     this.celebrityService.clearConnectionGraph();
   }
 }

@@ -2,8 +2,9 @@
   {{ isDarkMode ? '☀️ Light' : '🌙 Dark' }}
 </button>
 
+<app-toast-container></app-toast-container>
+
 <div class="app-container">
-  <app-toast-container></app-toast-container>
   <header class="app-header">
     <h1>🎬 Six Degrees of Celebrity</h1>
     <p>
@@ -22,20 +23,13 @@
     <div class="search-sections">
       <div class="search-section">
         <h3>Start Celebrity</h3>
-        <app-celebrity-search
-          (celebritySelected)="onStartCelebritySelected($event)"
-        ></app-celebrity-search>
-        <app-celebrity-card
-          *ngIf="startCelebrity"
-          [celebrity]="startCelebrity"
-        ></app-celebrity-card>
+        <app-celebrity-search (celebritySelected)="onStartCelebritySelected($event)"></app-celebrity-search>
+        <app-celebrity-card *ngIf="startCelebrity" [celebrity]="startCelebrity"></app-celebrity-card>
       </div>
 
       <div class="search-section">
         <h3>End Celebrity</h3>
-        <app-celebrity-search
-          (celebritySelected)="onEndCelebritySelected($event)"
-        ></app-celebrity-search>
+        <app-celebrity-search (celebritySelected)="onEndCelebritySelected($event)"></app-celebrity-search>
         <app-celebrity-card *ngIf="endCelebrity" [celebrity]="endCelebrity"></app-celebrity-card>
       </div>
     </div>
@@ -46,14 +40,9 @@
       {{ error }}
     </div>
 
-    <div
-      *ngIf="!connectionPath && !loading && startCelebrity && endCelebrity && !error"
-      class="no-connection"
-    >
+    <div *ngIf="!connectionPath && !loading && startCelebrity && endCelebrity && !error" class="no-connection">
       <h3>No Connection Found</h3>
-      <p>
-        We searched up to the maximum depth (6 degrees) but couldn't find a connection.
-      </p>
+      <p>We searched up to the maximum depth (6 degrees) but couldn't find a connection.</p>
       <ul>
         <li>They work in different film industries (e.g Hollywood vs Bollywood)</li>
         <li>TMDB database has incomplete information</li>
@@ -61,9 +50,7 @@
     </div>
 
     <div class="controls" *ngIf="startCelebrity || endCelebrity">
-      <button (click)="swapCelebrities()" [disabled]="!startCelebrity || !endCelebrity">
-        🔄 Swap Celebrities
-      </button>
+      <button (click)="swapCelebrities()" [disabled]="!startCelebrity || !endCelebrity">🔄 Swap Celebrities</button>
       <button (click)="resetSearch()">Reset Search</button>
     </div>
 
@@ -75,11 +62,7 @@
         <div
           *ngFor="let celebrity of popularCelebrities"
           class="celebrity-item"
-          (click)="
-            !startCelebrity
-              ? onStartCelebritySelected(celebrity)
-              : onEndCelebritySelected(celebrity)
-          "
+          (click)="!startCelebrity ? onStartCelebritySelected(celebrity) : onEndCelebritySelected(celebrity)"
         >
           <app-celebrity-card [celebrity]="celebrity"></app-celebrity-card>
         </div>
@@ -95,3 +78,4 @@
     </footer>
   </main>
 </div>
+

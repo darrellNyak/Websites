@@ -1,76 +1,224 @@
-.path-step{
-    display: flex;
+/* Horizontal path layout (cards + arrows) */
+.connection-path {
+  margin-top: 24px;
+}
+
+.connection-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.connection-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .path-container {
-    display: flex;
+  display: flex;
+  align-items: stretch;
+  gap: 14px;
+  overflow-x: auto;
+  padding: 8px 2px 14px;
+  scroll-snap-type: x mandatory;
 }
 
-.connection-arrow{
-    display: block;
-    width: min-content;
-    
+.path-step {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
 }
 
-.arrow{
-    font-size: 5em;
-    height: min-content
+.path-connector {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  scroll-snap-align: center;
 }
 
-.movie-poster {
-    height: 600px;
-    width: 450px;
+.arrow-fallback {
+  font-size: 34px;
+  font-weight: 900;
+  color: rgba(11, 36, 71, 0.7);
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  user-select: none;
+}
+
+/* V-shaped connector: celeb ↘︎ media ↗︎ celeb */
+.v-connector {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  min-width: 360px;
+  padding-top: 22px; /* gives room for the V arms */
+}
+
+.v-arm {
+  position: absolute;
+  top: 0;
+  width: 120px;
+  height: 4px; /* thicker connector */
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(11, 36, 71, 0.10),
+    rgba(11, 36, 71, 0.65)
+  );
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.10);
+}
+
+.v-arm-left {
+  left: 34px;
+  transform-origin: left center;
+  transform: rotate(28deg);
+}
+
+.v-arm-right {
+  right: 34px;
+  transform-origin: right center;
+  transform: rotate(-28deg);
+}
+
+.v-arm::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-left: 12px solid rgba(11, 36, 71, 0.78);
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.12));
+}
+
+/* Flip arrowhead direction for the right arm */
+.v-arm-right::after {
+  right: auto;
+  left: -8px;
+  border-left: none;
+  border-right: 12px solid rgba(11, 36, 71, 0.78);
+}
+
+.connector-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.7);
+  min-width: 340px; /* larger “movie card” */
+  margin-top: 34px; /* move the media card lower (base of the V) */
+}
+
+.connector-poster {
+  width: 86px;
+  height: 128px;
+  object-fit: cover;
+  border-radius: 10px;
+  flex: 0 0 auto;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.connector-info {
+  min-width: 0;
+}
+
+.connector-label {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.55);
+  margin-bottom: 2px;
+}
+
+.connector-title {
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.connector-year {
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+::ng-deep body.dark-mode .arrow-fallback {
+  color: rgba(74, 158, 255, 0.85);
+}
+
+::ng-deep body.dark-mode .v-arm {
+  background: linear-gradient(
+    90deg,
+    rgba(74, 158, 255, 0.10),
+    rgba(74, 158, 255, 0.62)
+  );
+  box-shadow: 0 10px 26px rgba(74, 158, 255, 0.10);
+}
+
+::ng-deep body.dark-mode .v-arm::after {
+  border-left-color: rgba(74, 158, 255, 0.85);
+}
+
+::ng-deep body.dark-mode .v-arm-right::after {
+  border-right-color: rgba(74, 158, 255, 0.85);
+}
+
+::ng-deep body.dark-mode .pill,
+::ng-deep body.dark-mode .connector-card {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(25, 25, 25, 0.65);
+}
+
+::ng-deep body.dark-mode .connector-label,
+::ng-deep body.dark-mode .connector-year {
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /*Mobile*/
 
 @media (max-width: 768px) {
-    .connection-path {
-        padding: 15px;
-    }
+  .connection-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 
-    .connection-step {
-        padding: 15px;
-    }
+  .arrow-fallback {
+    font-size: 28px;
+  }
 
-    .step-number {
-        width: 30px;
-        height: 30px;
-        font-size: 0.9em;
-    }
+  .v-connector {
+    min-width: 320px;
+  }
 
-    .celebrity-details h4 {
-        font-size: 1em;
-    }
-
-    .celevrity-details p {
-        font-size: 0.85em;
-    }
-
-    .movie-connection {
-        padding: 10px;
-        margin: 10px 0;
-    }
-
-    .movie-title {
-        font-size: 0.9em;
-    }
+  .v-arm {
+    width: 100px;
+  }
 }
 
 @media (max-width: 480px) {
-    .connection-path {
-        padding: 10px;
-    }
+  .connector-card {
+    padding: 10px;
+  }
 
-    .connection-step {
-        flex-direction: columnn;
-        text-align: center;
-    }
-
-    .step-number {
-        position: relative;
-        top: auto;
-        left: auto;
-        margin-bottom: 10px;
-    }
+  .connector-poster {
+    width: 50px;
+    height: 74px;
+  }
 }

@@ -2,17 +2,21 @@ import express from 'express';
 import axios from 'axios';
 
 const router = express.Router();
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
-if (!TMDB_API_KEY) {
-  console.error('Warning: TMDB_API_KEY is not set in environment variables');
+function getTmdbApiKey() {
+  return process.env.TMDB_API_KEY;
 }
 
 // Search celebrities
 router.get('/search', async (req, res) => {
   try {
+    const TMDB_API_KEY = getTmdbApiKey();
+    if (!TMDB_API_KEY) {
+      return res.status(500).json({ error: 'TMDB_API_KEY is not set on the server' });
+    }
+
     const { query, page = 1 } = req.query;
     
     if (!query) {
@@ -38,6 +42,11 @@ router.get('/search', async (req, res) => {
 // Get popular celebrities
 router.get('/popular', async (req, res) => {
   try {
+    const TMDB_API_KEY = getTmdbApiKey();
+    if (!TMDB_API_KEY) {
+      return res.status(500).json({ error: 'TMDB_API_KEY is not set on the server' });
+    }
+
     const url = `${TMDB_BASE_URL}/person/popular?api_key=${TMDB_API_KEY}`;
     const response = await axios.get(url);
     
@@ -53,6 +62,11 @@ router.get('/popular', async (req, res) => {
 // Get celebrity details
 router.get('/person/:id', async (req, res) => {
   try {
+    const TMDB_API_KEY = getTmdbApiKey();
+    if (!TMDB_API_KEY) {
+      return res.status(500).json({ error: 'TMDB_API_KEY is not set on the server' });
+    }
+
     const { id } = req.params;
     const url = `${TMDB_BASE_URL}/person/${id}?api_key=${TMDB_API_KEY}`;
     const response = await axios.get(url);
@@ -68,6 +82,11 @@ router.get('/person/:id', async (req, res) => {
 // Get celebrity credits (movies)
 router.get('/person/:id/credits', async (req, res) => {
   try {
+    const TMDB_API_KEY = getTmdbApiKey();
+    if (!TMDB_API_KEY) {
+      return res.status(500).json({ error: 'TMDB_API_KEY is not set on the server' });
+    }
+
     const { id } = req.params;
     const url = `${TMDB_BASE_URL}/person/${id}/combined_credits?api_key=${TMDB_API_KEY}`;
     const response = await axios.get(url);
@@ -95,6 +114,11 @@ router.get('/person/:id/credits', async (req, res) => {
 // Get celebrity TV credits
 router.get('/person/:id/tv-credits', async (req, res) => {
   try {
+    const TMDB_API_KEY = getTmdbApiKey();
+    if (!TMDB_API_KEY) {
+      return res.status(500).json({ error: 'TMDB_API_KEY is not set on the server' });
+    }
+
     const { id } = req.params;
     const url = `${TMDB_BASE_URL}/person/${id}/combined_credits?api_key=${TMDB_API_KEY}`;
     const response = await axios.get(url);
@@ -124,6 +148,11 @@ router.get('/person/:id/tv-credits', async (req, res) => {
 // Get movie credits
 router.get('/movie/:id/credits', async (req, res) => {
   try {
+    const TMDB_API_KEY = getTmdbApiKey();
+    if (!TMDB_API_KEY) {
+      return res.status(500).json({ error: 'TMDB_API_KEY is not set on the server' });
+    }
+
     const { id } = req.params;
     const url = `${TMDB_BASE_URL}/movie/${id}/credits?api_key=${TMDB_API_KEY}`;
     const response = await axios.get(url);
@@ -141,6 +170,11 @@ router.get('/movie/:id/credits', async (req, res) => {
 // Get TV show credits
 router.get('/tv/:id/credits', async (req, res) => {
   try {
+    const TMDB_API_KEY = getTmdbApiKey();
+    if (!TMDB_API_KEY) {
+      return res.status(500).json({ error: 'TMDB_API_KEY is not set on the server' });
+    }
+
     const { id } = req.params;
     const url = `${TMDB_BASE_URL}/tv/${id}/credits?api_key=${TMDB_API_KEY}`;
     const response = await axios.get(url);
@@ -160,6 +194,11 @@ router.get('/tv/:id/credits', async (req, res) => {
 // Get movie details
 router.get('/movie/:id', async (req, res) => {
   try {
+    const TMDB_API_KEY = getTmdbApiKey();
+    if (!TMDB_API_KEY) {
+      return res.status(500).json({ error: 'TMDB_API_KEY is not set on the server' });
+    }
+
     const { id } = req.params;
     const url = `${TMDB_BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}`;
     const response = await axios.get(url);
@@ -174,6 +213,11 @@ router.get('/movie/:id', async (req, res) => {
 // Get TV show details
 router.get('/tv/:id', async (req, res) => {
   try {
+    const TMDB_API_KEY = getTmdbApiKey();
+    if (!TMDB_API_KEY) {
+      return res.status(500).json({ error: 'TMDB_API_KEY is not set on the server' });
+    }
+
     const { id } = req.params;
     const url = `${TMDB_BASE_URL}/tv/${id}?api_key=${TMDB_API_KEY}`;
     const response = await axios.get(url);

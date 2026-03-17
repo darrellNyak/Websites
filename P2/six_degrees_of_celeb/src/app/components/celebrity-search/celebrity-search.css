@@ -161,6 +161,18 @@
   margin-top: 2px;
 }
 
+.search-loading {
+  padding: 12px 10px;
+  font-weight: 700;
+  color: #0B2447;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+::ng-deep body.dark-mode .search-loading {
+  color: #4a9eff !important;
+  border-bottom-color: #444 !important;
+}
+
 ::ng-deep body.dark-mode .no-results {
   background: #2a2a2a !important;
   border-color: #4a9eff !important;

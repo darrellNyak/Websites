@@ -26,6 +26,21 @@ body.dark-mode .celebrity-card {
     padding: 15px;
 }
 
+.profession-list {
+    margin: 8px 0 0 0;
+    padding-left: 18px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.profession-list li {
+    margin: 2px 0;
+}
+
+body.dark-mode .profession-list {
+    color: #aaa;
+}
+
 .celebrity-name {
     font-size: 1.1em;
     font-weight: 600;

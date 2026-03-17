@@ -55,6 +55,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "proxyConfig": "proxy.conf.json"
+          },
           "configurations": {
             "production": {
               "buildTarget": "six_degrees_of_celeb:build:production"
@@ -89,5 +92,8 @@
         }
       }
     }
+  },
+  "cli": {
+    "analytics": "a04f56d5-47d7-4851-a958-b62bf531aeae"
   }
 }

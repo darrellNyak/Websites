@@ -1,0 +1,20 @@
+<div class="toast-stack" aria-live="polite" aria-atomic="true">
+  <div
+    class="toast"
+    *ngFor="let t of (toastService.toasts$ | async)"
+    [class.toast-info]="t.type === 'info'"
+    [class.toast-success]="t.type === 'success'"
+    [class.toast-warning]="t.type === 'warning'"
+    [class.toast-error]="t.type === 'error'"
+    role="status"
+  >
+    <div class="toast-body">
+      <div class="toast-title" *ngIf="t.title">{{ t.title }}</div>
+      <div class="toast-message">{{ t.message }}</div>
+    </div>
+    <button class="toast-close" type="button" (click)="dismiss(t.id)" aria-label="Dismiss">
+      ×
+    </button>
+  </div>
+</div>
+

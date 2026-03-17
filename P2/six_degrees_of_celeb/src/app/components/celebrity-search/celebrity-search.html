@@ -12,7 +12,10 @@
   <div class="underline"></div>
 
   
-  <div *ngIf="showResults && searchResults.length > 0" class="search-results">
+  <div *ngIf="showResults" class="search-results">
+    <div *ngIf="loading" class="search-loading">
+      Searching…
+    </div>
     <div
       *ngFor="let celebrity of searchResults"
       (click)="selectCelebrity(celebrity)"
@@ -26,7 +29,7 @@
     </div>
   </div>
   
-  <div *ngIf="showResults && searchResults.length === 0" class="no-results">
+  <div *ngIf="showResults && !loading && searchResults.length === 0" class="no-results">
     No celebrities found
   </div>
 </div>
