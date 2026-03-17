@@ -1,6 +1,7 @@
 {
   "outputDirectory": "dist/six_degrees_of_celeb/browser",
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }

@@ -7,7 +7,7 @@ import { Celebrity } from '../models/celebrity';
   providedIn: 'root'
 })
 export class WikipediaService {
-  private readonly API_BASE_URL = 'http://localhost:3000/api/wikipedia';
+  private readonly API_BASE_URL = '/api/wikipedia';
 
   constructor(private http: HttpClient) {}
 

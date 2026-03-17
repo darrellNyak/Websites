@@ -7,7 +7,7 @@ import { Celebrity } from '../models/celebrity';
   providedIn: 'root'
 })
 export class TmdbService {
-  private readonly API_BASE_URL = 'http://localhost:3000/api/tmdb';
+  private readonly API_BASE_URL = '/api/tmdb';
   private readonly IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 
   constructor(private http: HttpClient) {}
